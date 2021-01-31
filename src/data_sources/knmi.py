@@ -39,7 +39,7 @@ class Knmi:
 
         # Input validation
         if data_mode not in Knmi.URLS:
-            known_data_modes = ', '.join([mode.name for mode in Knmi.URLS.keys()])
+            known_data_modes = ', '.join([mode.name for mode in DataMode])
             msg = f'Unknown data mode {data_mode}. Choose from: {known_data_modes}'
             raise AssertionError(msg)
 
@@ -49,6 +49,8 @@ class Knmi:
             data['start'] = start
         if end:
             data['end'] = end
+        # TODO: Remove this start date which is here for testing purposes only
+        data['start'] = '2021012801'
 
         # Make the request
         response = requests.get(url=Knmi.URLS[data_mode], params=data)
@@ -57,7 +59,7 @@ class Knmi:
             raise DownloadException(msg)
 
         # Write the response to file
-        filename = f'per_{data_mode.name}_knmi.csv'
+        filename = f'{data_mode.name}_knmi.csv'
         full_path_to_file = os.path.join(data_dir, filename)
         with open(full_path_to_file, 'w') as f:
             f.write(response.text)

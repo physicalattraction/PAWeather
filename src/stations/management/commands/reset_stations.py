@@ -5,8 +5,8 @@ import os.path
 from django.core.management import BaseCommand
 from django.db import transaction
 
+from common.utils import data_dir
 from stations.models import Station
-from utils import data_dir
 
 logger = logging.getLogger(__name__)
 

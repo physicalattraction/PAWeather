@@ -1,15 +1,13 @@
 from django.contrib import admin
 
-from measurements.models import HourlyMeasurement
-from stations.models import Station
+from measurements.models import Measurement
 
 
-@admin.register(HourlyMeasurement)
+@admin.register(Measurement)
 class HourlyMeasurementAdmin(admin.ModelAdmin):
-    # fields = ['station', 'day', 'hour', 'precipitation', 'sunshine']
     exclude = None
 
-    list_display = ['station_id', 'day', 'hour', 'precipitation', 'sunshine']
+    list_display = ['station_id', 'time', 'temperature', 'precipitation', 'sunshine']
     list_filter = ['station']
 
     def get_queryset(self, request):
