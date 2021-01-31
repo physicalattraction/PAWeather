@@ -12,4 +12,4 @@ class Station(models.Model):
         ordering = ['code']
 
     def __str__(self):
-        return '{} - {}'.format(self.code, self.name)
+        return f'{self.code} - {self.name}'

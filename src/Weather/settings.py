@@ -38,9 +38,10 @@ PREREQ_APPS = [
 ]
 
 PROJECT_APPS = [
-    'stations',
+    'common',
+    'data_sources',
     'measurements',
-    'knmi',
+    'stations',
 ]
 
 INSTALLED_APPS = PREREQ_APPS + PROJECT_APPS
