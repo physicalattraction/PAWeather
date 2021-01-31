@@ -12,7 +12,7 @@ class CsvExporter:
         Export the given range of measurements to a csv file, usable by Google Data Studio
         """
 
-        # TODO: GOogle Data Studio has a Latitude,Longitude field. Check out what it expects and export it as such
+        # TODO: Google Data Studio has a Latitude,Longitude field. Check out what it expects and export it as such
 
         station_fields = ['code', 'name', 'longitude', 'latitude', 'altitude']
         measurement_fields = ['time', 'wind_direction', 'wind_speed', 'gust_of_wind', 'temperature',
@@ -30,7 +30,3 @@ class CsvExporter:
             writer.writerow(station_fields + measurement_fields)
             for measurement in q:
                 writer.writerow(measurement)
-
-
-if __name__ == '__main__':
-    CsvExporter.export()

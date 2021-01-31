@@ -4,7 +4,7 @@ from measurements.models import Measurement
 
 
 @admin.register(Measurement)
-class HourlyMeasurementAdmin(admin.ModelAdmin):
+class MeasurementAdmin(admin.ModelAdmin):
     exclude = None
 
     list_display = ['station_id', 'time', 'temperature', 'precipitation', 'sunshine']
@@ -12,5 +12,5 @@ class HourlyMeasurementAdmin(admin.ModelAdmin):
 
     def get_queryset(self, request):
         queryset = super().get_queryset(request)
-        queryset = queryset.order_by('day', 'hour')
+        queryset = queryset.order_by('station_id', 'time')
         return queryset

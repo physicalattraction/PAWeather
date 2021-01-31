@@ -1,10 +1,17 @@
+import csv
 import logging
 import os.path
+from datetime import datetime
+from decimal import Decimal
 from enum import Enum
+from typing import List, Optional
 
 import requests
+from django.db import transaction
 
-from common.utils import data_dir
+from common.utils import data_dir, datetime_from_day_and_hour
+from measurements.models import Measurement
+from stations.models import Station
 
 logger = logging.getLogger(__name__)
 
@@ -66,6 +73,60 @@ class Knmi:
         logger.info(f'Weather information {data_mode.name} has been downloaded to {full_path_to_file}')
         return full_path_to_file
 
+    @staticmethod
+    def import_weather(data_mode: DataMode, full_path_to_file: str) -> List[Measurement]:
+        assert data_mode == DataMode.per_hour, 'Measurements per day not yet implemented'
 
-if __name__ == '__main__':
-    result = Knmi.download_weather(DataMode.per_day)
+        hourly_measurements = []
+        stations = {station.code: station for station in Station.objects.all()}
+        with open(full_path_to_file, 'r') as f:
+            csv_reader = csv.reader(f, delimiter=',', quotechar=None, skipinitialspace=True)
+            for line in csv_reader:
+                if line[0].startswith('#'):
+                    continue
+
+                line = [value or None for value in line]
+                station_code, day, hour, wind_direction, wind_speed, _, gust_of_wind, temperature, _, dew_temperature, \
+                sunshine, radiation, precipitation_duration, precipitation, air_pressure, visibility, cloud_cover, \
+                relative_humidity, _, _, mist, rain, snow, lightning, icing = line
+                station = stations[station_code]
+                day = datetime.strptime(day, '%Y%m%d')
+
+                hourly_measurements.append(Measurement(
+                    station=station, day=day, hour=hour, time=datetime_from_day_and_hour(day, int(hour) - 1),
+                    wind_direction=Knmi._parse_number(wind_direction),
+                    wind_speed=Knmi._parse_number(wind_speed), gust_of_wind=Knmi._parse_number(gust_of_wind),
+                    temperature=Knmi._parse_number(temperature), dew_temperature=Knmi._parse_number(dew_temperature),
+                    sunshine=Knmi._parse_number(sunshine), radiation=radiation,
+                    precipitation_duration=Knmi._parse_number(precipitation_duration),
+                    precipitation=Knmi._parse_number(precipitation), air_pressure=Knmi._parse_number(air_pressure),
+                    visibility=visibility, cloud_cover=cloud_cover, relative_humidity=relative_humidity,
+                    mist=mist or False, rain=rain or False, snow=snow or False, lightning=lightning or False,
+                    icing=icing or False)
+                )
+
+        if not hourly_measurements:
+            return []
+
+        with transaction.atomic():
+            Measurement.objects.all().delete()
+            Measurement.objects.bulk_create(hourly_measurements)
+        return hourly_measurements
+
+    @staticmethod
+    def _parse_number(n: Optional[str]) -> Optional[Decimal]:
+        """
+        Parse the Knmi numbers that are measured in 0.1 of a unit
+
+        :param n: String representation of the Knmi csv file
+        :return: Decimal representing that number
+
+        >>> Knmi._parse_number('24')
+        2.4
+        >>> Knmi._parse_number(None)
+        None
+        """
+
+        if n is None:
+            return None
+        return Decimal(n) / 10

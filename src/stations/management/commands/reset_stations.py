@@ -31,4 +31,5 @@ class Command(BaseCommand):
         with transaction.atomic():
             Station.objects.all().delete()
             Station.objects.bulk_create(stations)
-            logger.info(f'{len(stations)} stations processed')
+
+        logger.info(f'{len(stations)} stations processed')
